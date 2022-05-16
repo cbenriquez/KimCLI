@@ -60,6 +60,7 @@ func CMDSearch(p *Prompt, args []string) error {
 		return err
 	}
 	p.CurrentCartoon = &(*carts)[*c]
+	p.CurrentEpisode = nil
 	return nil
 }
 
