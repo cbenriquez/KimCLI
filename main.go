@@ -67,6 +67,7 @@ func CMDSearch(p *Prompt, args []string) error {
 func CMDEpisodes(p *Prompt, args []string) error {
 	if len(args) == 1 {
 		p.CurrentCartoon = &Cartoon{args[0], nil, nil}
+		p.CurrentEpisode = nil
 	}
 	if p.CurrentCartoon == nil {
 		return errors.New("cartoon unspecified")
