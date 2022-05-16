@@ -16,7 +16,7 @@ When the program is executed, you are presented with a command prompt. Use these
 | search, s, find, f | [keywords] | Select a cartoon.
 | episodes, eps | *optional:* [cartoon] | Select an episode. If parameter is empty, use the current selection.
 | watch, w, play, p | *optional:* [episode] | Select a playback quality and play the episode.
-
+| next, n | *none* | Select the next episode.
 
 ## Installation
 
@@ -26,9 +26,3 @@ Move the binary to any PATH directory.
 The only supported video player is MPV though more support will be added later.
 
 - [mpv](https://mpv.io/)
-
-## Planned Features
-- download video
-- play next video
-- autoselect playback quality
-- update mechanism

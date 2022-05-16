@@ -31,6 +31,10 @@ func main() {
 			Names: []string{"watch", "w", "play", "p"},
 			F:     CMDWatch,
 		},
+		{
+			Names: []string{"next", "n"},
+			F:     CMDNext,
+		},
 	}
 	p.Run()
 }
@@ -126,5 +130,24 @@ func CMDWatch(p *Prompt, args []string) error {
 	if err := vid.Play(); err != nil {
 		return err
 	}
+	return nil
+}
+
+func CMDNext(p *Prompt, _ []string) error {
+	eps, err := p.CurrentCartoon.Episodes()
+	if err != nil {
+		return err
+	}
+	var ei int
+	for i, ep := range *eps {
+		if ep == *p.CurrentEpisode {
+			ei = i
+			break
+		}
+	}
+	if ei == 0 {
+		return errors.New("reached last episode")
+	}
+	p.CurrentEpisode = &(*eps)[ei-1]
 	return nil
 }
