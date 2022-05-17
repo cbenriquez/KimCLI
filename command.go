@@ -1,13 +1,16 @@
 package main
 
+import "strings"
+
 type Command struct {
 	Names []string
-	F     func(cp *Prompt, args []string) error
+	F     func(args []string) error
 }
 
-func (c Command) Matches(name string) bool {
+func (c *Command) Matches(name string) bool {
+	nameLower := strings.ToLower(name)
 	for _, n := range c.Names {
-		if n == name {
+		if strings.ToLower(n) == nameLower {
 			return true
 		}
 	}

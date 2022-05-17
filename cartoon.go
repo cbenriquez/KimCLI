@@ -14,6 +14,50 @@ type Cartoon struct {
 	episodes *[]Episode
 }
 
+func NewCartoon(id string) *Cartoon {
+	var cart Cartoon
+	cart.ID = id
+	return &cart
+}
+
+func NewCartoonWithTitle(id string, title string) *Cartoon {
+	cart := NewCartoon(id)
+	cart.title = &title
+	return cart
+}
+
+func SearchCartoons(keywords string) (*[]Cartoon, error) {
+	val := url.Values{}
+	val.Set("keyword", keywords)
+	resp, err := http.Post(
+		"https://kimcartoon.li/Search/Cartoon",
+		"application/x-www-form-urlencoded",
+		strings.NewReader(val.Encode()),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var carts []Cartoon
+	doc.Find("a").Each(func(_ int, sel *goquery.Selection) {
+		t, ex := sel.Find("img").Attr("title")
+		if !ex {
+			return
+		}
+		l, ex := sel.Attr("href")
+		if !ex {
+			return
+		}
+		cartID := l[strings.LastIndex(l, "/")+1:]
+		carts = append(carts, *NewCartoonWithTitle(cartID, t))
+	})
+	return &carts, nil
+}
+
 func (c *Cartoon) Title() (*string, error) {
 	var err error
 	if c.title == nil {
@@ -62,36 +106,4 @@ func (c *Cartoon) Update() error {
 	})
 	c.episodes = &eps
 	return nil
-}
-
-func SearchCartoons(keywords string) (*[]Cartoon, error) {
-	val := url.Values{}
-	val.Set("keyword", keywords)
-	resp, err := http.Post(
-		"https://kimcartoon.li/Search/Cartoon",
-		"application/x-www-form-urlencoded",
-		strings.NewReader(val.Encode()),
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	var carts []Cartoon
-	doc.Find("a").Each(func(_ int, sel *goquery.Selection) {
-		t, ex := sel.Find("img").Attr("title")
-		if !ex {
-			return
-		}
-		l, ex := sel.Attr("href")
-		if !ex {
-			return
-		}
-		cartID := l[strings.LastIndex(l, "/")+1:]
-		carts = append(carts, Cartoon{cartID, &t, nil})
-	})
-	return &carts, nil
 }

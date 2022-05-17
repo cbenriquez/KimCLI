@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"os/exec"
 )
 
@@ -17,7 +17,21 @@ func (v *Video) Play() error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command("mpv", fmt.Sprintf(`--title=%s %s`, *ct, v.Episode.Name), v.File)
+	var cmd *exec.Cmd
+	title := *ct + " " + v.Episode.Name
+	if p, err := exec.LookPath("mpv"); err == nil {
+		cmd = &exec.Cmd{
+			Path: p,
+			Args: []string{"mpv", "--title=" + title, v.File},
+		}
+	} else if p, err := exec.LookPath("vlc"); err == nil {
+		cmd = &exec.Cmd{
+			Path: p,
+			Args: []string{"vlc", "--meta-title=" + title, v.File},
+		}
+	} else {
+		return errors.New("cannot find a supported media player")
+	}
 	if err := cmd.Run(); err != nil {
 		return err
 	}
