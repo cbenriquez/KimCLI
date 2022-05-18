@@ -47,7 +47,7 @@ When the program is executed, you are presented with a command prompt. Use these
 
 ## Installation
 
-Move the binary to any PATH directory.
+Download an executable in the [releases section](https://github.com/cbenriquez/KimCLI/releases) according to your operating system and architecture. Rename the file to "kimcli" and move it to your preferred PATH directory.
 
 ## Dependencies
 
