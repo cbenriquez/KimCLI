@@ -43,18 +43,44 @@ func SearchCartoons(keywords string) (*[]Cartoon, error) {
 		return nil, err
 	}
 	var carts []Cartoon
-	doc.Find("a").Each(func(_ int, sel *goquery.Selection) {
-		t, ex := sel.Find("img").Attr("title")
-		if !ex {
-			return
-		}
-		l, ex := sel.Attr("href")
-		if !ex {
-			return
-		}
-		cartID := l[strings.LastIndex(l, "/")+1:]
-		carts = append(carts, *NewCartoonWithTitle(cartID, t))
-	})
+	path := resp.Request.URL.Path
+	dir := path[:strings.LastIndex(path, "/")]
+	if dir == "/Cartoon" {
+		var cart = NewCartoonWithTitle(path[len(dir)+1:], doc.Find("div.heading").First().Text())
+		var eps []Episode
+		doc.Find("li").Each(func(_ int, sel *goquery.Selection) {
+			sel = sel.Find("a")
+			rel, ex := sel.Attr("rel")
+			if !ex {
+				return
+			}
+			if rel != "noreferrer noopener" {
+				return
+			}
+			n := sel.Text()
+			l, ex := sel.Attr("href")
+			if !ex {
+				return
+			}
+			epID := l[strings.LastIndex(l, "/")+1 : strings.LastIndex(l, "?")]
+			eps = append(eps, Episode{epID, n, cart, nil, nil})
+		})
+		cart.episodes = &eps
+		carts = append(carts, *cart)
+	} else if dir == "/Search" {
+		doc.Find("a").Each(func(_ int, sel *goquery.Selection) {
+			t, ex := sel.Find("img").Attr("title")
+			if !ex {
+				return
+			}
+			l, ex := sel.Attr("href")
+			if !ex {
+				return
+			}
+			cartID := l[strings.LastIndex(l, "/")+1:]
+			carts = append(carts, *NewCartoonWithTitle(cartID, t))
+		})
+	}
 	return &carts, nil
 }
 
