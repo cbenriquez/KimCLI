@@ -50,6 +50,8 @@ When the program is executed, you are presented with a command prompt. Use these
 Move the binary to any PATH directory.
 
 ## Dependencies
-The only supported video player is MPV though more support will be added later.
+
+The supported video player are MPV and VLC. To play videos, either one of these must be available in the PATH environment.
 
 - [mpv](https://mpv.io/)
+- [vlc](https://www.videolan.org/)
