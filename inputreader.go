@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -15,16 +16,19 @@ func ReadString() (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	in = in[:strings.LastIndex(in, "\n")]
+	in = strings.TrimRight(in, "\r\n")
 	return &in, nil
 }
 
 func ReadRange(min int, max int) (*int, error) {
 	for {
-		fmt.Printf("Enter an integer (%d-%d): ", min, max)
+		fmt.Printf("Enter an integer (%d - %d): ", min, max)
 		in, err := ReadString()
 		if err != nil {
 			return nil, err
+		}
+		if *in == "!" {
+			return nil, errors.New("exit read")
 		}
 		c, err := strconv.Atoi(*in)
 		if err != nil {
@@ -39,7 +43,7 @@ func ReadRange(min int, max int) (*int, error) {
 	}
 }
 
-func ParseInput(input string) (string, []string) {
+func ParseInput(input string) (*string, *[]string) {
 	var sentences []string
 	var sentence string
 	var inQuote bool
@@ -60,5 +64,9 @@ func ParseInput(input string) (string, []string) {
 			sentence += string(w)
 		}
 	}
-	return sentences[0], sentences[1:]
+	if len(sentences) == 0 {
+		return nil, nil
+	}
+	args := sentences[1:]
+	return &sentences[0], &args
 }

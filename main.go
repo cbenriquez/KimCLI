@@ -3,10 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 )
-
-var terminateProgram bool
 
 var commands []Command = []Command{
 	{
@@ -22,12 +21,32 @@ var commands []Command = []Command{
 		F:     Episodes,
 	},
 	{
-		Names: []string{"watch", "w", "play", "p"},
-		F:     Watch,
+		Names: []string{"play", "p", "watch", "w"},
+		F:     Play,
+	},
+	{
+		Names: []string{"play-highest", "ph", "watch-highest", "wh"},
+		F:     PlayHighest,
 	},
 	{
 		Names: []string{"next", "n"},
 		F:     Next,
+	},
+	{
+		Names: []string{"back", "b"},
+		F:     Back,
+	},
+	{
+		Names: []string{"list-episodes", "le"},
+		F:     ListEpisodes,
+	},
+	{
+		Names: []string{"first-episode", "fstep"},
+		F:     FirstEpisode,
+	},
+	{
+		Names: []string{"last-episode", "lstep"},
+		F:     LastEpisode,
 	},
 }
 
@@ -46,27 +65,27 @@ func main() {
 			panic(err)
 		}
 		name, args := ParseInput(*in)
+		if name == nil {
+			continue
+		}
 		var commandFound bool
 		for _, c := range commands {
-			if c.Matches(name) {
-				if err := c.F(args); err != nil {
-					fmt.Printf("%s: %s\n", name, err.Error())
+			if c.Matches(*name) {
+				if err := c.F(*args); err != nil {
+					fmt.Printf("%s: %s\n", *name, err.Error())
 				}
 				commandFound = true
 				break
 			}
 		}
 		if !commandFound {
-			fmt.Printf("%s: %s\n", name, "command not found")
-		}
-		if terminateProgram {
-			return
+			fmt.Printf("%s: %s\n", *name, "command not found")
 		}
 	}
 }
 
 func Exit(_ []string) error {
-	terminateProgram = true
+	os.Exit(0)
 	return nil
 }
 
@@ -95,9 +114,9 @@ func Search(args []string) error {
 }
 
 func Episodes(args []string) error {
-	if len(args) == 1 {
+	if len(args) > 0 {
 		ResetSelection()
-		selectedCartoon = NewCartoon(args[0])
+		selectedCartoon = NewCartoon(strings.Join(args, "-"))
 	}
 	if err := IsCartoonSelected(); err != nil {
 		return err
@@ -120,24 +139,13 @@ func Episodes(args []string) error {
 	return nil
 }
 
-func Watch(args []string) error {
+func Play(args []string) error {
 	if err := IsCartoonSelected(); err != nil {
 		return err
 	}
-	if len(args) == 1 {
-		eps, err := selectedCartoon.Episodes()
-		if err != nil {
+	if len(args) > 0 {
+		if err := SelectEpisode(strings.Join(args, "-")); err != nil {
 			return err
-		}
-		es := strings.ToLower(args[0])
-		for _, ep := range *eps {
-			if strings.ToLower(ep.ID) == es {
-				selectedEpisode = &ep
-				break
-			}
-		}
-		if selectedEpisode == nil {
-			return errors.New("invalid episode ID")
 		}
 	} else if selectedEpisode == nil {
 		return errors.New("episode ID not specified")
@@ -145,6 +153,9 @@ func Watch(args []string) error {
 	vids, err := selectedEpisode.Videos()
 	if err != nil {
 		return err
+	}
+	if len(*vids) == 0 {
+		return errors.New("no videos found")
 	}
 	for i, vid := range *vids {
 		fmt.Printf("%d) %s - %s\n", i, vid.Label, vid.Type)
@@ -154,6 +165,31 @@ func Watch(args []string) error {
 		return err
 	}
 	vid := (*vids)[*c]
+	if err := vid.Play(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func PlayHighest(args []string) error {
+	if err := IsCartoonSelected(); err != nil {
+		return err
+	}
+	if len(args) > 0 {
+		if err := SelectEpisode(strings.Join(args, "-")); err != nil {
+			return err
+		}
+	} else if selectedEpisode == nil {
+		return errors.New("episode ID not specified")
+	}
+	vids, err := selectedEpisode.Videos()
+	if err != nil {
+		return err
+	}
+	if len(*vids) == 0 {
+		return errors.New("no videos found")
+	}
+	vid := (*vids)[len(*vids)-1]
 	if err := vid.Play(); err != nil {
 		return err
 	}
@@ -179,5 +215,85 @@ func Next(_ []string) error {
 		return errors.New("reached last episode")
 	}
 	selectedEpisode = &(*eps)[ei-1]
+	return nil
+}
+
+func Back(_ []string) error {
+	if err := IsEpisodeSelected(); err != nil {
+		return err
+	}
+	eps, err := selectedCartoon.Episodes()
+	if err != nil {
+		return err
+	}
+	var ei int
+	for i, ep := range *eps {
+		if ep == *selectedEpisode {
+			ei = i
+			break
+		}
+	}
+	if ei == len(*eps)-1 {
+		return errors.New("reached first episode")
+	}
+	selectedEpisode = &(*eps)[ei+1]
+	return nil
+}
+
+func ListEpisodes(args []string) error {
+	var c *Cartoon
+	ai := strings.Join(args, "-")
+	if len(args) > 1 && !strings.EqualFold(ai, selectedCartoon.ID) {
+		c = NewCartoon(ai)
+	} else if err := IsCartoonSelected(); err != nil {
+		return err
+	} else {
+		c = selectedCartoon
+	}
+	eps, err := c.Episodes()
+	if err != nil {
+		return err
+	}
+	for i, ep := range *eps {
+		fmt.Printf("%d) %s\n", i, ep.Name)
+	}
+	return nil
+}
+
+func FirstEpisode(args []string) error {
+	if len(args) > 0 {
+		ResetSelection()
+		selectedCartoon = NewCartoon(strings.Join(args, "-"))
+	}
+	if err := IsCartoonSelected(); err != nil {
+		return err
+	}
+	eps, err := selectedCartoon.Episodes()
+	if err != nil {
+		return err
+	}
+	if len(*eps) == 0 {
+		return errors.New("empty result")
+	}
+	selectedEpisode = &(*eps)[len(*eps)-1]
+	return nil
+}
+
+func LastEpisode(args []string) error {
+	if len(args) > 0 {
+		ResetSelection()
+		selectedCartoon = NewCartoon(strings.Join(args, "-"))
+	}
+	if err := IsCartoonSelected(); err != nil {
+		return err
+	}
+	eps, err := selectedCartoon.Episodes()
+	if err != nil {
+		return err
+	}
+	if len(*eps) == 0 {
+		return errors.New("empty result")
+	}
+	selectedEpisode = &(*eps)[0]
 	return nil
 }

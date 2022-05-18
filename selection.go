@@ -1,6 +1,9 @@
 package main
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 var selectedCartoon *Cartoon
 
@@ -21,6 +24,24 @@ func IsCartoonSelected() error {
 func IsEpisodeSelected() error {
 	if selectedEpisode == nil {
 		return errors.New("episode not selected")
+	}
+	return nil
+}
+
+func SelectEpisode(id string) error {
+	eps, err := selectedCartoon.Episodes()
+	if err != nil {
+		return err
+	}
+	es := strings.ToLower(id)
+	for _, ep := range *eps {
+		if strings.ToLower(ep.ID) == es {
+			selectedEpisode = &ep
+			break
+		}
+	}
+	if selectedEpisode == nil {
+		return errors.New("invalid episode ID")
 	}
 	return nil
 }

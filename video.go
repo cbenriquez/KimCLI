@@ -6,9 +6,9 @@ import (
 )
 
 type Video struct {
-	File    string
-	Label   string
-	Type    string
+	File    string `json:"file"`
+	Label   string `json:"label"`
+	Type    string `json:"type"`
 	Episode *Episode
 }
 
