@@ -2,7 +2,7 @@
 
 A command line interface for watching cartoons.
 
-It scraps information from [KimCartoon](https://kimcartoon.li/) hence the name. It uses MPV to play videos. It is developed in Go.
+It scraps information from [KimCartoon](https://kimcartoon.li/) hence the name. It uses either MPV or VLC to play videos. It is developed in Go.
 
 ## Commands
 
