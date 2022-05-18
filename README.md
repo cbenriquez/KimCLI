@@ -24,21 +24,21 @@ When the program is executed, you are presented with a command prompt. Use these
 | next, n | *none* | Select the next episode.
 | back, b | *none* | Select the previous episode.
 
-## Playing an Episode
+### Playing an Episode
 
 | Name(s) | Parameter(s) | Description
 | - | - | -
 | watch, w, play, p | *none* | Select a playback quality from a list and play the episode.
 | play-highest, ph | *none* | Play the episode with the highest playback quality.
 
-## Downloading an Episode
+### Downloading an Episode
 
 | Name(s) | Parameter(s) | Description
 | - | - | -
 | download, d | *none* | Select a playback quality and download the episode.
 | download-highest, dh | *none* | Download the episode with the highest playback quality.
 
-## Others
+### Others
 
 | Name(s) | Parameter(s) | Description
 | - | - | -
